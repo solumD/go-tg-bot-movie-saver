@@ -2,48 +2,39 @@ package main
 
 import (
 	"fmt"
+	"log"
 
-	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
+	"github.com/solumD/go-tg-bot-movie-saver/storage"
 )
 
 func main() {
-	client := k.New()
-	m, err := client.RandomMovie()
+	s, err := storage.New("./storage/database/movies.db")
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
-	fmt.Println("Random")
-	fmt.Println("Age", m.Age)
-	fmt.Println("Title", m.Title)
-	fmt.Println("Description", m.Description)
-	fmt.Println("Length", m.Length)
-	fmt.Println("Id", m.Id)
-	fmt.Println("Year", m.Year)
-	fmt.Println("Rating", m.Rating.KpRating)
-	m, err = client.RandomMovieWithGosling()
+	log.Println("connected to db")
+
+	err = s.Init()
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
-	fmt.Println()
-	fmt.Println("Gosling")
-	fmt.Println("Age", m.Age)
-	fmt.Println("Title", m.Title)
-	fmt.Println("Description", m.Description)
-	fmt.Println("Length", m.Length)
-	fmt.Println("Id", m.Id)
-	fmt.Println("Year", m.Year)
-	fmt.Println("Rating", m.Rating.KpRating)
-	m, err = client.MovieById("1309570")
+	err = s.Remove("12313", "sassyba")
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
-	fmt.Println()
-	fmt.Println("ById")
-	fmt.Println("Age", m.Age)
-	fmt.Println("Title", m.Title)
-	fmt.Println("Description", m.Description)
-	fmt.Println("Length", m.Length)
-	fmt.Println("Id", m.Id)
-	fmt.Println("Year", m.Year)
-	fmt.Println("Rating", m.Rating.KpRating)
+	m, err := s.Pick("sassyba")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(m)
+	flag, err := s.IsExist("12313", "sassyba")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(flag)
 }

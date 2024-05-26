@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	m "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk/movie"
 	r "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk/request"
+	m "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk/types"
 )
 
 const (
