@@ -1,5 +1,0 @@
-database_path: "./storage/movies.db"
-kinopoisk_client: 
-  timeout: 10s
-  uri: ""
-  api_token: ""
