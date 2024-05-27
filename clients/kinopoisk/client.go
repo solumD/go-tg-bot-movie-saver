@@ -23,18 +23,18 @@ type KinopoiskClient struct {
 	APIToken string
 }
 
-func New() *KinopoiskClient {
+func New(timeout time.Duration, uri, token string) *KinopoiskClient {
 
 	return &KinopoiskClient{
 		Client: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: timeout,
 		},
-		Uri:      "https://api.kinopoisk.dev/",
-		APIToken: "C9PJMWY-QH34X1R-KXKTE6C-C11YG86",
+		Uri:      uri,
+		APIToken: token,
 	}
 }
 
-func (k KinopoiskClient) RandomMovie() (*m.Movie, error) {
+func (k KinopoiskClient) Random() (*m.Movie, error) {
 	params := map[string]string{"limit": "1", "type": "movie", "rating.kp": "7-10", "lists": "top250"}
 	req, err := r.CreateRequest(k.Uri, RandomMovieEP, k.APIToken, params)
 	if err != nil {
@@ -65,7 +65,7 @@ func (k KinopoiskClient) RandomMovie() (*m.Movie, error) {
 	return &movie, nil
 }
 
-func (k KinopoiskClient) RandomMovieWithGosling() (*m.Movie, error) {
+func (k KinopoiskClient) RandomWithGosling() (*m.Movie, error) {
 	params := map[string]string{"limit": "1", "type": "movie", "rating.kp": "7-10", "persons.id": "10143"}
 	req, err := r.CreateRequest(k.Uri, RandomMovieWithGoslingEP, k.APIToken, params)
 	if err != nil {
@@ -96,7 +96,7 @@ func (k KinopoiskClient) RandomMovieWithGosling() (*m.Movie, error) {
 	return &movie, nil
 }
 
-func (k KinopoiskClient) MovieById(id string) (*m.Movie, error) {
+func (k KinopoiskClient) ById(id string) (*m.Movie, error) {
 	req, err := r.CreateRequest(k.Uri, MovieByIdEP+id, k.APIToken, nil)
 	if err != nil {
 		log.Fatalf("Endpoint: %s, error: %s", MovieByIdEP, err)
