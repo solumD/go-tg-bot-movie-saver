@@ -1,5 +1,5 @@
 database_path: "./storage/movies.db"
 kinopoisk_client: 
   timeout: 10s
-  uri: ""
-  api_token: ""
+  uri: "https://api.kinopoisk.dev/"
+  api_token: "C9PJMWY-QH34X1R-KXKTE6C-C11YG86"
