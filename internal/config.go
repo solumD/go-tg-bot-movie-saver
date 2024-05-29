@@ -11,6 +11,7 @@ import (
 type Config struct {
 	DatabasePath    string `yaml:"database_path" env-required:"true"`
 	KinopoiskClient `yaml:"kinopoisk_client"`
+	BotToken        string `yaml:"bot_token" env-required:"true"`
 }
 
 type KinopoiskClient struct {
