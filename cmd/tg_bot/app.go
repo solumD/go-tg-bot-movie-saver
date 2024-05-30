@@ -10,14 +10,19 @@ import (
 )
 
 func main() {
+
+	// Загружаем конфиг
 	cfg := config.MustLoad()
 
+	// Инициализируем клиент кинопоиска
 	client := k.New(cfg.Timeout, cfg.Uri, cfg.ApiToken)
 	log.Println("Started kinopoisk client ✔")
 
+	// Инициализируем клиент тг-бота
 	tgBot := tg.New(cfg.BotToken)
 	log.Println("Started telegram bot client ✔")
 
+	// Канал для получения обновлений от пользователя
 	updatatesChan := tgBot.Update()
 
 	for update := range updatatesChan {

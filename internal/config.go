@@ -8,18 +8,21 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+// Конфиг
 type Config struct {
 	DatabasePath    string `yaml:"database_path" env-required:"true"`
 	KinopoiskClient `yaml:"kinopoisk_client"`
 	BotToken        string `yaml:"bot_token" env-required:"true"`
 }
 
+// Клиент кинопоиска
 type KinopoiskClient struct {
 	Timeout  time.Duration `yaml:"timeout" env-default:"10s"`
 	Uri      string        `yaml:"uri" env-required:"true"`
 	ApiToken string        `yaml:"api_token" env-required:"true"`
 }
 
+// MustLoad читает конфиг и возвращает объект Config с прочитанным данными
 func MustLoad() *Config {
 	configPath := "./config/config.yaml"
 

@@ -6,6 +6,7 @@ import (
 	"net/url"
 )
 
+// CreateRequest создает запрос с заранее подготовленными заголовками и добавляет в него переданные параметры (uriParams)
 func CreateRequest(uri string, endpoint string, APIToken string, uriParams map[string]string) (*http.Request, error) {
 	req, err := http.NewRequest(http.MethodGet, uri+endpoint, nil)
 	if err != nil {
@@ -19,6 +20,7 @@ func CreateRequest(uri string, endpoint string, APIToken string, uriParams map[s
 	return req, nil
 }
 
+// CreateParametresForRequest подготавливает параметры к передаче в запрос
 func CreateParametresForRequest(p map[string]string) url.Values {
 	params := url.Values{}
 	for k, v := range p {

@@ -9,10 +9,12 @@ import (
 	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
 )
 
+// Клиент тг-бота
 type TgBotClient struct {
 	Bot *tgbotapi.BotAPI
 }
 
+// New создает объект клиента тг-бота
 func New(token string) *TgBotClient {
 	b, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
@@ -21,11 +23,13 @@ func New(token string) *TgBotClient {
 	return &TgBotClient{Bot: b}
 }
 
+// Update получает обновления от пользователя
 func (t *TgBotClient) Update() tgbotapi.UpdatesChannel {
 	updateConfig := tgbotapi.NewUpdate(0)
 	return t.Bot.GetUpdatesChan(updateConfig)
 }
 
+// Greeting отправляет сообщение приветствия
 func (t *TgBotClient) Greeting(chatID int64) error {
 	m := "Привет, я бот для сохранения фильмов с Кинопоиска и не только\n\nДоступные команды:\n\n/random - посоветую случайный фильм\n/randomwithgosling - посоветую случайный фильм с Райаном Гослингом ;)\n/savemovie - сохранить фильм\n/removemovie - удалить фильм из сохраненного\n/mymovies - вывести все сохраненные фильмы"
 
@@ -36,6 +40,7 @@ func (t *TgBotClient) Greeting(chatID int64) error {
 	return nil
 }
 
+// Random получает случайный фильм через клиент Кинопоиска и отправляет его
 func (t *TgBotClient) Random(c *k.KinopoiskClient, chatID int64) error {
 	movie, err := c.Random()
 	if err != nil {
@@ -53,6 +58,7 @@ func (t *TgBotClient) Random(c *k.KinopoiskClient, chatID int64) error {
 	return nil
 }
 
+// RandomWithGosling получает случайный фильм с Райаном Гослингом через клиент Кинопоиска и отправляет его
 func (t *TgBotClient) RandomWithGosling(c *k.KinopoiskClient, chatID int64) error {
 	movie, err := c.RandomWithGosling()
 	if err != nil {
@@ -70,8 +76,9 @@ func (t *TgBotClient) RandomWithGosling(c *k.KinopoiskClient, chatID int64) erro
 	return nil
 }
 
-func (t *TgBotClient) InDevelopment(chatID int64) error {
-	m := "В разработке..."
+// Unrecognized отправляет сообщение о неизвестной команде
+func (t *TgBotClient) Unrecognized(chatID int64) error {
+	m := "Неизвестная команда"
 
 	mConfig := tgbotapi.NewMessage(chatID, m)
 	if _, err := t.Bot.Send(mConfig); err != nil {
@@ -80,8 +87,9 @@ func (t *TgBotClient) InDevelopment(chatID int64) error {
 	return nil
 }
 
-func (t *TgBotClient) Unrecognized(chatID int64) error {
-	m := "Неизвестная команда"
+// InDevelopment сообщает пользователю, что команда в разработке
+func (t *TgBotClient) InDevelopment(chatID int64) error {
+	m := "В разработке..."
 
 	mConfig := tgbotapi.NewMessage(chatID, m)
 	if _, err := t.Bot.Send(mConfig); err != nil {

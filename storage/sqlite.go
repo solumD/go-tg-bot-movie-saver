@@ -11,6 +11,7 @@ type Storage struct {
 	db *sql.DB
 }
 
+// New создает объект БД
 func New(path string) (*Storage, error) {
 	db, err := sql.Open("sqlite3", path)
 	if err != nil {
@@ -25,6 +26,7 @@ func New(path string) (*Storage, error) {
 
 }
 
+// Save сохраняет фильм в БД
 func (s *Storage) Save(movieId, title, username string) error {
 	q := `insert into saved_movies (movie_id, title, user_name) values (?, ?, ?)`
 
@@ -36,11 +38,13 @@ func (s *Storage) Save(movieId, title, username string) error {
 	return nil
 }
 
+// Тип для фильма из БД
 type movie struct {
 	id    string
 	title string
 }
 
+// Pick получает список всех фильмов пользователя из БД
 func (s *Storage) Pick(username string) ([]movie, error) {
 	q := `select movie_id, title from saved_movies where user_name = ?`
 
@@ -62,10 +66,11 @@ func (s *Storage) Pick(username string) ([]movie, error) {
 	return movies, nil
 }
 
-func (s *Storage) Remove(id, username string) error {
+// Remove удаляет конкретный фильм конкретного пользователя из БД
+func (s *Storage) Remove(movieId, username string) error {
 	q := `delete from saved_movies where movie_id = ? and user_name = ?`
 
-	_, err := s.db.Exec(q, id, username)
+	_, err := s.db.Exec(q, movieId, username)
 	if err != nil {
 		return fmt.Errorf("can't delete movie from db for user %s: %w", username, err)
 	}
@@ -73,6 +78,7 @@ func (s *Storage) Remove(id, username string) error {
 	return nil
 }
 
+// IsExist проверяет, существует ли конкретный фильм у конкретного пользователя
 func (s *Storage) IsExist(id, username string) (bool, error) {
 	q := `select count(*) from saved_movies where movie_id = ? and user_name = ?`
 
@@ -85,6 +91,7 @@ func (s *Storage) IsExist(id, username string) (bool, error) {
 	return count > 0, nil
 }
 
+// Init создает в БД таблицу `saved_movies`, если она не создана
 func (s *Storage) Init() error {
 	q := `create table if not exists saved_movies (
 		id integer primary key autoincrement,
