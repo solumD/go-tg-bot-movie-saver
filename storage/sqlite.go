@@ -85,7 +85,7 @@ func (s *Storage) IsExist(id, username string) (bool, error) {
 	var count int
 
 	if err := s.db.QueryRow(q, id, username).Scan(&count); err != nil {
-		return false, fmt.Errorf("can't create table saved_movies: %w", err)
+		return false, fmt.Errorf("can't check if movie exist: %w", err)
 	}
 
 	return count > 0, nil
