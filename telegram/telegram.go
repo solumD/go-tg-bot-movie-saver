@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
+	s "github.com/solumD/go-tg-bot-movie-saver/storage"
 )
 
 // Клиент тг-бота
@@ -15,12 +17,13 @@ type TgBotClient struct {
 }
 
 // New создает объект клиента тг-бота
-func New(token string) *TgBotClient {
+func New(token string) (*TgBotClient, error) {
 	b, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Fatalf("can't connect to TG by token: %s", err)
+		return nil, err
 	}
-	return &TgBotClient{Bot: b}
+	return &TgBotClient{Bot: b}, nil
 }
 
 // Update получает обновления от пользователя
@@ -72,6 +75,71 @@ func (t *TgBotClient) RandomWithGosling(c *k.KinopoiskClient, chatID int64) erro
 	mConfig := tgbotapi.NewMessage(chatID, m)
 	if _, err := t.Bot.Send(mConfig); err != nil {
 		return err
+	}
+	return nil
+}
+
+// SaveMovie сохраняет фильм в БД
+func (t *TgBotClient) SaveMovie(c *k.KinopoiskClient, storage *s.Storage, chatID int64, updateChan tgbotapi.UpdatesChannel) error {
+	m := "Отравьте ссылку фильма на Кинопоиске без вспомогательных символов.\nПример: https://www.kinopoisk.ru/film/0000/"
+	mConfig := tgbotapi.NewMessage(chatID, m)
+	if _, err := t.Bot.Send(mConfig); err != nil {
+		return err
+	}
+
+	for update := range updateChan {
+		msgText := update.Message.Text
+
+		if strings.Contains(msgText, "kinopoisk.ru") && strings.Contains(msgText, "film") {
+
+			movieId := strings.Split(msgText, "/")[4]
+			username := update.Message.From.UserName
+
+			movie, err := c.ById(movieId)
+			if err != nil {
+				log.Fatalf("can't find movie by id: %s", err)
+				return err
+			}
+
+			exist, err := storage.IsExist(movieId, username)
+			if err != nil {
+				return err
+			}
+			if exist {
+				m = fmt.Sprintf("Фильм \"%s\" уже был сохранен!", movie.Title)
+				mConfig := tgbotapi.NewMessage(chatID, m)
+				if _, err := t.Bot.Send(mConfig); err != nil {
+					return err
+				}
+				break
+			}
+
+			if err = storage.Save(movieId, movie.Title, username); err != nil {
+				return err
+			}
+
+			m = fmt.Sprintf("Фильм \"%s\" был успешно сохранен. ", movie.Title)
+			mConfig := tgbotapi.NewMessage(chatID, m)
+			if _, err := t.Bot.Send(mConfig); err != nil {
+				return err
+			}
+			break
+
+		} else if strings.TrimSpace(strings.ToLower(msgText)) == "отмена" {
+			m = "Действие отменено."
+			mConfig := tgbotapi.NewMessage(chatID, m)
+			if _, err := t.Bot.Send(mConfig); err != nil {
+				return err
+			}
+			break
+
+		} else {
+			m = "Ошибка!\nОтправьте ссылку в указанном формате: https://www.kinopoisk.ru/film/0000/\nДля отмены команды отправьте слово \"Отмена\""
+			mConfig := tgbotapi.NewMessage(chatID, m)
+			if _, err := t.Bot.Send(mConfig); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

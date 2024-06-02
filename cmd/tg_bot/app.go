@@ -5,8 +5,8 @@ import (
 
 	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
 	config "github.com/solumD/go-tg-bot-movie-saver/internal"
+	s "github.com/solumD/go-tg-bot-movie-saver/storage"
 	tg "github.com/solumD/go-tg-bot-movie-saver/telegram"
-	//s "github.com/solumD/go-tg-bot-movie-saver/storage"
 )
 
 func main() {
@@ -19,8 +19,17 @@ func main() {
 	log.Println("Started kinopoisk client ✔")
 
 	// Инициализируем клиент тг-бота
-	tgBot := tg.New(cfg.BotToken)
+	tgBot, err := tg.New(cfg.BotToken)
+	if err != nil {
+		log.Fatal()
+	}
 	log.Println("Started telegram bot client ✔")
+
+	//
+	storage, err := s.New(cfg.DatabasePath)
+	if err != nil {
+		log.Fatal()
+	}
 
 	// Канал для получения обновлений от пользователя
 	updatatesChan := tgBot.Update()
@@ -51,7 +60,7 @@ func main() {
 
 		case `/savemovie`:
 			chatId := update.Message.Chat.ID
-			err := tgBot.InDevelopment(chatId)
+			err := tgBot.SaveMovie(client, storage, chatId, updatatesChan)
 			if err != nil {
 				log.Fatalf("can't save a movie: %s", err)
 			}
