@@ -40,8 +40,8 @@ func (s *Storage) Save(movieId, title, username string) error {
 
 // Тип для фильма из БД
 type movie struct {
-	id    string
-	title string
+	Id    string
+	Title string
 }
 
 // Pick получает список всех фильмов пользователя из БД
@@ -57,7 +57,7 @@ func (s *Storage) Pick(username string) ([]movie, error) {
 	var movies []movie
 	for rows.Next() {
 		var m movie
-		if err := rows.Scan(&m.id, &m.title); err != nil {
+		if err := rows.Scan(&m.Id, &m.Title); err != nil {
 			return nil, fmt.Errorf("can't select movie from db: %w", err)
 		}
 		movies = append(movies, m)
@@ -67,10 +67,10 @@ func (s *Storage) Pick(username string) ([]movie, error) {
 }
 
 // Remove удаляет конкретный фильм конкретного пользователя из БД
-func (s *Storage) Remove(movieId, username string) error {
-	q := `delete from saved_movies where movie_id = ? and user_name = ?`
+func (s *Storage) Remove(title, username string) error {
+	q := `delete from saved_movies where title = ? and user_name = ?`
 
-	_, err := s.db.Exec(q, movieId, username)
+	_, err := s.db.Exec(q, title, username)
 	if err != nil {
 		return fmt.Errorf("can't delete movie from db for user %s: %w", username, err)
 	}
@@ -79,7 +79,20 @@ func (s *Storage) Remove(movieId, username string) error {
 }
 
 // IsExist проверяет, существует ли конкретный фильм у конкретного пользователя
-func (s *Storage) IsExist(id, username string) (bool, error) {
+func (s *Storage) IsExistByTitle(title, username string) (bool, error) {
+	q := `select count(*) from saved_movies where title = ? and user_name = ?`
+
+	var count int
+
+	if err := s.db.QueryRow(q, title, username).Scan(&count); err != nil {
+		return false, fmt.Errorf("can't check if movie exist: %w", err)
+	}
+
+	return count > 0, nil
+}
+
+// IsExist проверяет, существует ли конкретный фильм у конкретного пользователя
+func (s *Storage) IsExistById(id, username string) (bool, error) {
 	q := `select count(*) from saved_movies where movie_id = ? and user_name = ?`
 
 	var count int
@@ -95,9 +108,9 @@ func (s *Storage) IsExist(id, username string) (bool, error) {
 func (s *Storage) Init() error {
 	q := `create table if not exists saved_movies (
 		id integer primary key autoincrement,
-		movie_id varchar(30),
-		title varchar(255),
-		user_name varchar(200)
+		movie_id text,
+		title text,
+		user_name text
 	)`
 	_, err := s.db.Exec(q)
 	if err != nil {
