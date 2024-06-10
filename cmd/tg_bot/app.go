@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-
 	// Загружаем конфиг
 	cfg := config.MustLoad()
 

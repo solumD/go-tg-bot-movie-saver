@@ -66,7 +66,7 @@ func (s *Storage) Pick(username string) ([]movie, error) {
 	return movies, nil
 }
 
-// Remove удаляет конкретный фильм конкретного пользователя из БД
+// Remove удаляет конкретный фильм конкретного пользователя из БД по названию фильма
 func (s *Storage) Remove(title, username string) error {
 	q := `delete from saved_movies where title = ? and user_name = ?`
 
@@ -78,7 +78,7 @@ func (s *Storage) Remove(title, username string) error {
 	return nil
 }
 
-// IsExist проверяет, существует ли конкретный фильм у конкретного пользователя
+// IsExist проверяет, существует ли конкретный фильм у конкретного пользователя по названию фильма
 func (s *Storage) IsExistByTitle(title, username string) (bool, error) {
 	q := `select count(*) from saved_movies where title = ? and user_name = ?`
 
@@ -91,7 +91,7 @@ func (s *Storage) IsExistByTitle(title, username string) (bool, error) {
 	return count > 0, nil
 }
 
-// IsExist проверяет, существует ли конкретный фильм у конкретного пользователя
+// IsExist проверяет, существует ли конкретный фильм у конкретного пользователя по id фильма
 func (s *Storage) IsExistById(id, username string) (bool, error) {
 	q := `select count(*) from saved_movies where movie_id = ? and user_name = ?`
 
