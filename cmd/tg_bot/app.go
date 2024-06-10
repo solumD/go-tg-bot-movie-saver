@@ -6,9 +6,9 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
+	tg "github.com/solumD/go-tg-bot-movie-saver/clients/telegram"
 	config "github.com/solumD/go-tg-bot-movie-saver/internal"
 	s "github.com/solumD/go-tg-bot-movie-saver/storage"
-	tg "github.com/solumD/go-tg-bot-movie-saver/telegram"
 )
 
 func main() {

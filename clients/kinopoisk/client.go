@@ -1,4 +1,4 @@
-package client
+package kinopoisk
 
 import (
 	"encoding/json"
