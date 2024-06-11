@@ -9,7 +9,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
-	s "github.com/solumD/go-tg-bot-movie-saver/storage"
+	"github.com/solumD/go-tg-bot-movie-saver/storage"
 )
 
 // Клиент тг-бота
@@ -21,7 +21,7 @@ type TgBotClient struct {
 func New(token string) (*TgBotClient, error) {
 	b, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.Fatalf("can't connect to TG by token: %s", err)
+		log.Fatalf("can't connect to TG by token: %s", token)
 		return nil, err
 	}
 	return &TgBotClient{Bot: b}, nil
@@ -35,9 +35,7 @@ func (t *TgBotClient) Update() tgbotapi.UpdatesChannel {
 
 // Greeting отправляет сообщение приветствия
 func (t *TgBotClient) Greeting(chatID int64) error {
-	m := "Привет, я бот для сохранения фильмов с Кинопоиска и не только\n\nДоступные команды:\n\n/random - посоветую случайный фильм\n/randomwithgosling - посоветую случайный фильм с Райаном Гослингом ;)\n/savemovie - сохранить фильм\n/removemovie - удалить фильм из сохраненного\n/mymovies - вывести все сохраненные фильмы"
-
-	mConfig := tgbotapi.NewMessage(chatID, m)
+	mConfig := tgbotapi.NewMessage(chatID, msgGreeting)
 	if _, err := t.Bot.Send(mConfig); err != nil {
 		return err
 	}
@@ -50,7 +48,7 @@ func (t *TgBotClient) Random(c *k.KinopoiskClient, chatID int64) error {
 	if err != nil {
 		return err
 	}
-	link := "https://www.kinopoisk.ru/film/" + strconv.Itoa(movie.Id)
+	link := kinopoiskMovieLink + strconv.Itoa(movie.Id)
 
 	m := fmt.Sprintf("Название: \"%s\"\n\nО чем: %s\n\nРейтинг на КП: %.2f\nОграничение по возрасту: %d+\nГод выхода: %d\nДлительность: %d минут\nСсылка на КП: %s",
 		movie.Title, movie.Description, movie.Rating.KpRating, movie.Age, movie.Year, movie.Length, link)
@@ -68,7 +66,7 @@ func (t *TgBotClient) RandomWithGosling(c *k.KinopoiskClient, chatID int64) erro
 	if err != nil {
 		return err
 	}
-	link := "https://www.kinopoisk.ru/film/" + strconv.Itoa(movie.Id)
+	link := kinopoiskMovieLink + strconv.Itoa(movie.Id)
 
 	m := fmt.Sprintf("Конечно, вот хороший фильм с Райаном Гослингом\n\nНазвание: \"%s\"\n\nО чем: %s\n\nРейтинг на КП: %.2f\nОграничение по возрасту: %d+\nГод выхода: %d\nДлительность: %d минут\nСсылка на КП: %s",
 		movie.Title, movie.Description, movie.Rating.KpRating, movie.Age, movie.Year, movie.Length, link)
@@ -81,12 +79,11 @@ func (t *TgBotClient) RandomWithGosling(c *k.KinopoiskClient, chatID int64) erro
 }
 
 // SaveMovie сохраняет фильм в БД
-func (t *TgBotClient) Save(c *k.KinopoiskClient, storage *s.Storage, msgText string, username string, chatID int64) error {
+func (t *TgBotClient) Save(c *k.KinopoiskClient, storage storage.Storage, msgText string, username string, chatID int64) error {
 	msgText = strings.ToLower(strings.TrimSpace(msgText))
 	fields := strings.Fields(msgText)
 	if len(fields) < 2 {
-		m := "Для сохранения отправьте ссылку фильма на Кинопоиске после вызова команды.\n\nПример: /savemovie https://www.kinopoisk.ru/film/0000/"
-		mConfig := tgbotapi.NewMessage(chatID, m)
+		mConfig := tgbotapi.NewMessage(chatID, msgSave)
 		if _, err := t.Bot.Send(mConfig); err != nil {
 			return err
 		}
@@ -94,8 +91,7 @@ func (t *TgBotClient) Save(c *k.KinopoiskClient, storage *s.Storage, msgText str
 	}
 
 	if len(fields) > 2 {
-		m := "Неверный формат команды!\n\nОтправьте ссылку в указанном формате:\n/savemovie https://www.kinopoisk.ru/film/0000/"
-		mConfig := tgbotapi.NewMessage(chatID, m)
+		mConfig := tgbotapi.NewMessage(chatID, msgInvalidSaveCommand)
 		if _, err := t.Bot.Send(mConfig); err != nil {
 			return err
 		}
@@ -107,8 +103,7 @@ func (t *TgBotClient) Save(c *k.KinopoiskClient, storage *s.Storage, msgText str
 		uriFields := strings.Split(uri, "/")
 
 		if len(uriFields) > 5 {
-			m := "Неверный формат команды!\n\nОтправьте ссылку в указанном формате:\n/savemovie https://www.kinopoisk.ru/film/0000/"
-			mConfig := tgbotapi.NewMessage(chatID, m)
+			mConfig := tgbotapi.NewMessage(chatID, msgInvalidSaveCommand)
 			if _, err := t.Bot.Send(mConfig); err != nil {
 				return err
 			}
@@ -174,8 +169,7 @@ func (t *TgBotClient) Save(c *k.KinopoiskClient, storage *s.Storage, msgText str
 		}
 
 	} else {
-		m := "Неверный формат команды!\n\nОтправьте ссылку в указанном формате:\n/savemovie https://www.kinopoisk.ru/film/0000/"
-		mConfig := tgbotapi.NewMessage(chatID, m)
+		mConfig := tgbotapi.NewMessage(chatID, msgInvalidSaveCommand)
 		if _, err := t.Bot.Send(mConfig); err != nil {
 			return err
 		}
@@ -185,11 +179,10 @@ func (t *TgBotClient) Save(c *k.KinopoiskClient, storage *s.Storage, msgText str
 }
 
 // Remove удаляет фильм из БД по названию
-func (t *TgBotClient) Remove(storage *s.Storage, msgText string, username string, chatID int64) error {
+func (t *TgBotClient) Remove(storage storage.Storage, msgText string, username string, chatID int64) error {
 	fields := strings.Fields(msgText)
 	if len(fields) < 2 {
-		m := "Для удаления отправьте название фильма без кавычек, как оно записано в сохраненном.\n/mymovies - показать сохраненные фильмы\n\nПример: /removemovie Драйв"
-		mConfig := tgbotapi.NewMessage(chatID, m)
+		mConfig := tgbotapi.NewMessage(chatID, msgRemove)
 		if _, err := t.Bot.Send(mConfig); err != nil {
 			return err
 		}
@@ -207,8 +200,7 @@ func (t *TgBotClient) Remove(storage *s.Storage, msgText string, username string
 		return err
 	}
 	if !exist {
-		m := "Фильм не найден в сохраненном. Проверьте название фильма.\nПример: /removemovie Драйв"
-		mConfig := tgbotapi.NewMessage(chatID, m)
+		mConfig := tgbotapi.NewMessage(chatID, msgRemoveNotFound)
 		if _, err := t.Bot.Send(mConfig); err != nil {
 			return err
 		}
@@ -228,7 +220,7 @@ func (t *TgBotClient) Remove(storage *s.Storage, msgText string, username string
 }
 
 // Movies выводит все сохраненные пользователем фильмы
-func (t *TgBotClient) Movies(chatID int64, username string, storage *s.Storage) error {
+func (t *TgBotClient) Movies(chatID int64, username string, storage storage.Storage) error {
 	allMovies, err := storage.Pick(username)
 	if err != nil {
 		return err
@@ -243,7 +235,7 @@ func (t *TgBotClient) Movies(chatID int64, username string, storage *s.Storage) 
 	}
 
 	m := "Сохраненные фильмы\n\n"
-	uri := "https://www.kinopoisk.ru/film/"
+	uri := kinopoiskMovieLink
 	for idx, movie := range allMovies {
 		row := fmt.Sprintf("%d) %s\nСсылка: %s\n\n", idx+1, movie.Title, uri+movie.Id)
 		m = m + row
@@ -260,9 +252,7 @@ func (t *TgBotClient) Movies(chatID int64, username string, storage *s.Storage) 
 
 // Unrecognized отправляет сообщение о неизвестной команде
 func (t *TgBotClient) Unrecognized(chatID int64) error {
-	m := "Неизвестная команда"
-
-	mConfig := tgbotapi.NewMessage(chatID, m)
+	mConfig := tgbotapi.NewMessage(chatID, msgUnrecognized)
 	if _, err := t.Bot.Send(mConfig); err != nil {
 		return err
 	}
@@ -271,9 +261,7 @@ func (t *TgBotClient) Unrecognized(chatID int64) error {
 
 // InDevelopment сообщает пользователю, что команда в разработке
 func (t *TgBotClient) InDevelopment(chatID int64) error {
-	m := "В разработке..."
-
-	mConfig := tgbotapi.NewMessage(chatID, m)
+	mConfig := tgbotapi.NewMessage(chatID, msgInDevelopment)
 	if _, err := t.Bot.Send(mConfig); err != nil {
 		return err
 	}

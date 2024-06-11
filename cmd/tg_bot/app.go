@@ -8,7 +8,8 @@ import (
 	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
 	tg "github.com/solumD/go-tg-bot-movie-saver/clients/telegram"
 	config "github.com/solumD/go-tg-bot-movie-saver/internal"
-	s "github.com/solumD/go-tg-bot-movie-saver/storage"
+	"github.com/solumD/go-tg-bot-movie-saver/storage"
+	sqlite "github.com/solumD/go-tg-bot-movie-saver/storage/sqlite"
 )
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	log.Println("Started telegram bot client ✔")
 
 	// Инициализируем хранилище
-	storage, err := s.New(cfg.DatabasePath)
+	storage, err := sqlite.New(cfg.DatabasePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,7 +50,7 @@ func main() {
 
 }
 
-func CommandsHandler(update tgbotapi.Update, client *k.KinopoiskClient, storage *s.Storage, tgBot *tg.TgBotClient) {
+func CommandsHandler(update tgbotapi.Update, client *k.KinopoiskClient, storage storage.Storage, tgBot *tg.TgBotClient) {
 	msgText := update.Message.Text
 	username := update.Message.From.UserName
 	chatID := update.Message.Chat.ID

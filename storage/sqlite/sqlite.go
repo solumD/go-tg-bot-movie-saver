@@ -1,10 +1,11 @@
-package storage
+package sqlite
 
 import (
 	"database/sql"
 	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/solumD/go-tg-bot-movie-saver/storage"
 )
 
 type Storage struct {
@@ -38,14 +39,8 @@ func (s *Storage) Save(movieId, title, username string) error {
 	return nil
 }
 
-// Тип для фильма из БД
-type movie struct {
-	Id    string
-	Title string
-}
-
 // Pick получает список всех фильмов пользователя из БД
-func (s *Storage) Pick(username string) ([]movie, error) {
+func (s *Storage) Pick(username string) ([]storage.Movie, error) {
 	q := `select movie_id, title from saved_movies where user_name = ?`
 
 	rows, err := s.db.Query(q, username)
@@ -54,9 +49,9 @@ func (s *Storage) Pick(username string) ([]movie, error) {
 	}
 	defer rows.Close()
 
-	var movies []movie
+	var movies []storage.Movie
 	for rows.Next() {
-		var m movie
+		var m storage.Movie
 		if err := rows.Scan(&m.Id, &m.Title); err != nil {
 			return nil, fmt.Errorf("can't select movie from db: %w", err)
 		}
