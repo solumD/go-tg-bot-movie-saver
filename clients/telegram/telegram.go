@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"unicode"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
@@ -92,25 +93,74 @@ func (t *TgBotClient) Save(c *k.KinopoiskClient, storage *s.Storage, msgText str
 		return nil
 	}
 
+	if len(fields) > 2 {
+		m := "Неверный формат команды!\n\nОтправьте ссылку в указанном формате:\n/savemovie https://www.kinopoisk.ru/film/0000/"
+		mConfig := tgbotapi.NewMessage(chatID, m)
+		if _, err := t.Bot.Send(mConfig); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	uri := fields[1]
 	if strings.Contains(uri, "kinopoisk.ru") && strings.Contains(uri, "film") && strings.Contains(uri, "https://") {
-		movieId := strings.Split(uri, "/")[4]
+		uriFields := strings.Split(uri, "/")
+
+		if len(uriFields) > 5 {
+			m := "Неверный формат команды!\n\nОтправьте ссылку в указанном формате:\n/savemovie https://www.kinopoisk.ru/film/0000/"
+			mConfig := tgbotapi.NewMessage(chatID, m)
+			if _, err := t.Bot.Send(mConfig); err != nil {
+				return err
+			}
+			return nil
+		}
+
+		movieId := uriFields[4]
+		for _, v := range movieId {
+			if !unicode.IsDigit(v) {
+				m := fmt.Sprintf("Неверное id фильма: %s", movieId)
+				mConfig := tgbotapi.NewMessage(chatID, m)
+				if _, err := t.Bot.Send(mConfig); err != nil {
+					return err
+				}
+				return nil
+			}
+		}
+
+		if string(movieId[0]) == "0" {
+			m := fmt.Sprintf("Неверное id фильма: %s", movieId)
+			mConfig := tgbotapi.NewMessage(chatID, m)
+			if _, err := t.Bot.Send(mConfig); err != nil {
+				return err
+			}
+			return nil
+		}
+
 		movie, err := c.ById(movieId)
 		if err != nil {
 			return err
+		}
+		if len(movie.Title) == 0 {
+			m := "Неизвестный фильм. Отсутсвует название"
+			mConfig := tgbotapi.NewMessage(chatID, m)
+			if _, err := t.Bot.Send(mConfig); err != nil {
+				return err
+			}
+			return nil
 		}
 
 		exist, err := storage.IsExistById(movieId, username)
 		if err != nil {
 			return err
 		}
+
 		if exist {
 			m := fmt.Sprintf("Фильм \"%s\" уже был сохранен!", movie.Title)
 			mConfig := tgbotapi.NewMessage(chatID, m)
 			if _, err := t.Bot.Send(mConfig); err != nil {
 				return err
 			}
-
+			return nil
 		}
 
 		if err = storage.Save(movieId, movie.Title, username); err != nil {
