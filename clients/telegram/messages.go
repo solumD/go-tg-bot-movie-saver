@@ -10,13 +10,13 @@ const msgGreeting = `Привет, я бот для сохранения фил�
 /removemovie - удалить фильм из сохраненного
 /mymovies - вывести все сохраненные фильмы`
 
-const msgInvalidSaveCommand = `Неверный формат команды!
+const msgInvalidSaveCommand = `Неверный формат ссылки!
 Отправьте ссылку в указанном формате:
-/savemovie https://www.kinopoisk.ru/film/0000/`
+/savemovie https://www.kinopoisk.ru/film/0000`
 
 const msgSave = `Для сохранения отправьте ссылку фильма на Кинопоиске после вызова команды.
 
-Пример: /savemovie https://www.kinopoisk.ru/film/0000/`
+Пример: /savemovie https://www.kinopoisk.ru/film/0000`
 
 const msgRemove = `Для удаления отправьте название фильма без кавычек, как оно записано в сохраненном.
 /mymovies - показать сохраненные фильмы
@@ -27,8 +27,8 @@ const msgRemoveNotFound = `Фильм не найден в сохраненно�
 
 Пример: /removemovie Драйв`
 
-const kinopoiskMovieLink = "https://www.kinopoisk.ru/film/"
-
 const msgUnrecognized = "Неизвестная команда"
 
 const msgInDevelopment = "В разработке..."
+
+const kinopoiskMovieLink = "https://www.kinopoisk.ru/film/"

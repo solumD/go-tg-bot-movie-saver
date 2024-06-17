@@ -3,9 +3,9 @@ package telegram
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	k "github.com/solumD/go-tg-bot-movie-saver/clients/kinopoisk"
@@ -81,7 +81,7 @@ func (t *TgBotClient) RandomWithGosling(c *k.KinopoiskClient, chatID int64) erro
 // SaveMovie сохраняет фильм в БД
 func (t *TgBotClient) Save(c *k.KinopoiskClient, storage storage.Storage, msgText string, username string, chatID int64) error {
 	msgText = strings.ToLower(strings.TrimSpace(msgText))
-	fields := strings.Fields(msgText)
+	fields := strings.SplitN(msgText, " ", 2)
 	if len(fields) < 2 {
 		mConfig := tgbotapi.NewMessage(chatID, msgSave)
 		if _, err := t.Bot.Send(mConfig); err != nil {
@@ -90,53 +90,25 @@ func (t *TgBotClient) Save(c *k.KinopoiskClient, storage storage.Storage, msgTex
 		return nil
 	}
 
-	if len(fields) > 2 {
-		mConfig := tgbotapi.NewMessage(chatID, msgInvalidSaveCommand)
-		if _, err := t.Bot.Send(mConfig); err != nil {
-			return err
-		}
-		return nil
-	}
-
 	uri := fields[1]
-	if strings.Contains(uri, "kinopoisk.ru") && strings.Contains(uri, "film") && strings.Contains(uri, "https://") {
-		uriFields := strings.Split(uri, "/")
-
-		if len(uriFields) > 5 {
+	if matched, err := regexp.MatchString(`^https:\/\/www\.kinopoisk\.ru\/film\/\d+$`, uri); matched {
+		if err != nil {
 			mConfig := tgbotapi.NewMessage(chatID, msgInvalidSaveCommand)
 			if _, err := t.Bot.Send(mConfig); err != nil {
 				return err
 			}
-			return nil
+			return err
 		}
 
-		movieId := uriFields[4]
-		for _, v := range movieId {
-			if !unicode.IsDigit(v) {
-				m := fmt.Sprintf("Неверное id фильма: %s", movieId)
-				mConfig := tgbotapi.NewMessage(chatID, m)
-				if _, err := t.Bot.Send(mConfig); err != nil {
-					return err
-				}
-				return nil
-			}
-		}
-
-		if string(movieId[0]) == "0" {
-			m := fmt.Sprintf("Неверное id фильма: %s", movieId)
-			mConfig := tgbotapi.NewMessage(chatID, m)
-			if _, err := t.Bot.Send(mConfig); err != nil {
-				return err
-			}
-			return nil
-		}
+		movieId := strings.Split(uri, "/")[4]
 
 		movie, err := c.ById(movieId)
 		if err != nil {
 			return err
 		}
+
 		if len(movie.Title) == 0 {
-			m := "Неизвестный фильм. Отсутсвует название"
+			m := "Неизвестный фильм"
 			mConfig := tgbotapi.NewMessage(chatID, m)
 			if _, err := t.Bot.Send(mConfig); err != nil {
 				return err
@@ -145,6 +117,20 @@ func (t *TgBotClient) Save(c *k.KinopoiskClient, storage storage.Storage, msgTex
 		}
 
 		exist, err := storage.IsExistById(movieId, username)
+		if err != nil {
+			return err
+		}
+
+		if exist {
+			m := fmt.Sprintf("Фильм \"%s\" уже был сохранен!", movie.Title)
+			mConfig := tgbotapi.NewMessage(chatID, m)
+			if _, err := t.Bot.Send(mConfig); err != nil {
+				return err
+			}
+			return nil
+		}
+
+		exist, err = storage.IsExistByTitle(movie.Title, username)
 		if err != nil {
 			return err
 		}
