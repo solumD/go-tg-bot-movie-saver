@@ -91,7 +91,7 @@ func (t *TgBotClient) Save(c *k.KinopoiskClient, storage storage.Storage, msgTex
 	}
 
 	uri := fields[1]
-	if matched, err := regexp.MatchString(`^https:\/\/www\.kinopoisk\.ru\/film\/\d+$`, uri); matched {
+	if matched, err := regexp.MatchString(`^https:\/\/www\.kinopoisk\.ru\/film\/\d+\/?$`, uri); matched {
 		if err != nil {
 			mConfig := tgbotapi.NewMessage(chatID, msgInvalidSaveCommand)
 			if _, err := t.Bot.Send(mConfig); err != nil {
